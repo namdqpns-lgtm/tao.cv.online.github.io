@@ -119,7 +119,7 @@ function render(){
  save()}
 var DL=null;try{claude.use("downloads").then(function(d){DL=d}).catch(function(){})}catch(e){}
 function say(m){document.getElementById("msg").textContent=m||""}
-function dlBlob(blob,name){var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;a.style.display="none";document.body.appendChild(a);if("download" in a){a.click()}else{window.open(u,"_blank")}document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u)},60000)}
+function dlBlob(blob,name){var u=URL.createObjectURL(blob);try{var a=document.createElement("a");a.href=u;a.download=name;a.style.display="none";document.body.appendChild(a);a.click();document.body.removeChild(a)}catch(e){}var m=document.getElementById("msg");m.textContent="";var l=document.createElement("a");l.href=u;l.download=name;l.target="_blank";l.rel="noopener";l.textContent="PDF đã sẵn sàng. Nếu chưa thấy file tải về, bấm vào đây để tải.";l.style.cssText="display:inline-block;padding:6px 0;color:var(--accent);font-weight:600";m.appendChild(l);if(/Zalo|FBAN|FBAV|Instagram|Messenger/i.test(navigator.userAgent)){var n=document.createElement("div");n.textContent="Bạn đang mở trong trình duyệt của ứng dụng (Zalo/Facebook...), thường không cho tải file. Hãy mở trang bằng Chrome hoặc Safari.";m.appendChild(n)}return"link"}
 function pdf(){
  var cv=document.getElementById("cv"),b=document.getElementById("print");
  
@@ -132,7 +132,7 @@ function pdf(){
   d.addImage(im,"JPEG",0,0,W,h);
   while(left>1){y-=H;d.addPage();d.addImage(im,"JPEG",0,y,W,h);left-=H}
   var blob=d.output("blob"),nm=(S.name||"CV").trim()+" - CV.pdf";return DL?DL.save({filename:nm,data:blob}):dlBlob(blob,nm)
- }).then(function(){say("Đã lưu PDF.")}).catch(function(e){reset();say(e&&e.code==="declined"?"":"Không tạo được PDF, hãy thử lại.")})}
+ }).then(function(r){if(r!=="link")say("Đã lưu PDF.")}).catch(function(e){reset();say(e&&e.code==="declined"?"":"Không tạo được PDF, hãy thử lại.")})}
 document.addEventListener("input",function(e){var t=e.target;
  if(t.dataset.k){S[t.dataset.k]=t.value}else if(t.dataset.l){S[t.dataset.l][+t.dataset.i][t.dataset.f]=t.value}else return;render()});
 document.addEventListener("click",function(e){var t=e.target;
