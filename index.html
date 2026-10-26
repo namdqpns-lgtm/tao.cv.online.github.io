@@ -56,11 +56,13 @@ button.main{background:var(--accent);border-color:var(--accent);color:#fff;font-
 #cv .hb ul{columns:150px;margin:0}
 @media(max-width:600px){#cv:not(.pf) .top{flex-direction:column}#cv:not(.pf) .tx{padding:16px}#cv:not(.pf) .cols{grid-template-columns:1fr}#cv:not(.pf) .xi{grid-template-columns:1fr;gap:4px}}
 @media print{body{background:#fff}.panel,.bar,.sub{display:none!important}.app{display:block;padding:0}.stage{overflow:visible}#cv{box-shadow:none;max-width:none}}
+.ov{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.88);overflow:auto;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}.ov p{color:#fff;text-align:center;margin:0 0 8px}.ov img{display:block;width:100%;max-width:794px;margin:0 auto 12px;background:#fff}.ov button{display:block;margin:0 auto}.ov a.dl{display:block;text-align:center;color:#fff;font-weight:600;margin:0 0 12px;text-decoration:underline}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+<div class="panel" id="iab" hidden style="margin:16px auto 0;width:calc(100% - 32px);max-width:1168px"><b>Bạn đang mở trang trong ứng dụng (Zalo, Facebook...)</b><div style="color:var(--mute);margin:6px 0 10px;font-size:13px">Các ứng dụng này thường không cho tải file PDF. Hãy mở trang bằng Chrome hoặc Safari, hoặc lưu CV dạng ảnh.</div><div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="main" id="openchrome" hidden>Mở bằng Chrome</button><button type="button" id="copylink">Sao chép link</button><button type="button" id="saveimg">Lưu CV dạng ảnh</button><span id="iabmsg" role="status" style="flex-basis:100%;font-size:13px;color:var(--mute)"></span></div></div>
 <div class="app">
 <div class="panel" id="form">
 <h1>Tạo CV của bạn</h1>
@@ -84,7 +86,7 @@ button.main{background:var(--accent);border-color:var(--accent);color:#fff;font-
 <div>
 <div class="panel bar">
 <span id="sws"></span>
-<button type="button" class="main" id="print" style="margin-left:auto">Tải PDF</button><span id="msg" role="status" style="flex-basis:100%;font-size:13px;color:var(--mute)"></span>
+<span style="margin-left:auto;display:flex;gap:8px"><button type="button" id="img">Lưu ảnh</button><button type="button" class="main" id="print">Tải PDF</button></span><span id="msg" role="status" style="flex-basis:100%;font-size:13px;color:var(--mute)"></span>
 </div>
 <div class="stage"><div id="cv"></div></div>
 </div>
@@ -145,6 +147,14 @@ document.getElementById("photo").addEventListener("change",function(e){var f=e.t
 function sw(){document.getElementById("sws").innerHTML=COL.map(function(c){return'<button type="button" class="sw'+(c===S.color?" on":"")+'" data-c="'+c+'" style="background:'+c+'" aria-label="Màu '+c+'"></button>'}).join(" ")}
 document.querySelectorAll("[data-k]").forEach(function(i){i.value=S[i.dataset.k]||""});
 document.querySelectorAll(".tp").forEach(function(b){b.classList.toggle("on",b.dataset.t===S.tpl)});
+var IAB=/Zalo|FBAN|FBAV|FB_IAB|Instagram|Messenger/i.test(navigator.userAgent);
+function iabSay(m){document.getElementById("iabmsg").textContent=m;document.getElementById("msg").textContent=m}
+function imgOut(){var cv=document.getElementById("cv");if(!window.html2canvas){iabSay("Thư viện chưa tải xong, hãy thử lại sau vài giây.");return}iabSay("Đang tạo ảnh...");cv.classList.add("pf");cv.style.width="794px";cv.style.maxWidth="none";var reset=function(){cv.classList.remove("pf");cv.style.width="";cv.style.maxWidth=""};window.html2canvas(cv,{scale:2,backgroundColor:"#ffffff"}).then(function(c){reset();var o=document.createElement("div");o.className="ov";var u=c.toDataURL("image/jpeg",.92);o.innerHTML='<p>Nhấn giữ (hoặc bấm chuột phải) vào ảnh rồi chọn “Lưu ảnh”.</p><img alt="CV" src="'+u+'"><a class="dl">Tải ảnh về máy</a><button type="button" class="main">Đóng</button>';var a=o.querySelector(".dl");a.href=u;a.download=(S.name||"CV").trim()+" - CV.jpg";o.querySelector("button").onclick=function(){o.remove()};document.body.appendChild(o);iabSay("")}).catch(function(){reset();iabSay("Không tạo được ảnh, hãy thử lại.")})}
+if(IAB){document.getElementById("iab").hidden=false;if(/Android/i.test(navigator.userAgent))document.getElementById("openchrome").hidden=false;
+document.getElementById("openchrome").onclick=function(){iabSay("Nếu không mở được Chrome, hãy bấm dấu ba chấm ở góc màn hình rồi chọn Mở bằng trình duyệt.");location.href="intent://"+location.host+location.pathname+location.search+"#Intent;scheme=https;package=com.android.chrome;end"};
+document.getElementById("copylink").onclick=function(){var t=document.createElement("textarea");t.value=location.href;t.style.cssText="position:fixed;top:0;left:0;width:1px;height:1px;min-height:0;opacity:0";document.body.appendChild(t);t.select();t.setSelectionRange(0,t.value.length);var ok=false;try{ok=document.execCommand("copy")}catch(e){}document.body.removeChild(t);iabSay(ok?"Đã sao chép link. Hãy dán vào Chrome hoặc Safari để mở.":"Không sao chép được. Hãy bấm dấu ba chấm rồi chọn Mở bằng trình duyệt.")};
+document.getElementById("saveimg").onclick=imgOut}
+document.getElementById("img").onclick=imgOut;
 list("exp");list("edu");list("act");sw();render();
 </script>
 </body>
