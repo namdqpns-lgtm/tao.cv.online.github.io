@@ -119,9 +119,10 @@ function render(){
  save()}
 var DL=null;try{claude.use("downloads").then(function(d){DL=d}).catch(function(){})}catch(e){}
 function say(m){document.getElementById("msg").textContent=m||""}
+function dlBlob(blob,name){var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;a.style.display="none";document.body.appendChild(a);if("download" in a){a.click()}else{window.open(u,"_blank")}document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u)},60000)}
 function pdf(){
  var cv=document.getElementById("cv"),b=document.getElementById("print");
- if(!DL){say("Chưa tải được PDF trực tiếp trong khung này. Hãy mở trang trong claude.ai, hoặc nhấn Ctrl+P (Cmd+P) rồi chọn Lưu thành PDF.");try{window.print()}catch(e){}return}
+ 
  if(!window.html2canvas||!window.jspdf){say("Thư viện tạo PDF chưa tải xong, hãy thử lại sau vài giây.");return}
  b.disabled=true;say("Đang tạo PDF...");cv.classList.add("pf");cv.style.width="794px";cv.style.maxWidth="none";
  var reset=function(){cv.classList.remove("pf");cv.style.width="";cv.style.maxWidth="";b.disabled=false};
@@ -130,7 +131,7 @@ function pdf(){
   var d=new window.jspdf.jsPDF({unit:"mm",format:"a4"}),W=210,H=297,h=c.height*W/c.width,im=c.toDataURL("image/jpeg",.92),y=0,left=h-H;
   d.addImage(im,"JPEG",0,0,W,h);
   while(left>1){y-=H;d.addPage();d.addImage(im,"JPEG",0,y,W,h);left-=H}
-  return DL.save({filename:(S.name||"CV").trim()+" - CV.pdf",data:d.output("blob")})
+  var blob=d.output("blob"),nm=(S.name||"CV").trim()+" - CV.pdf";return DL?DL.save({filename:nm,data:blob}):dlBlob(blob,nm)
  }).then(function(){say("Đã lưu PDF.")}).catch(function(e){reset();say(e&&e.code==="declined"?"":"Không tạo được PDF, hãy thử lại.")})}
 document.addEventListener("input",function(e){var t=e.target;
  if(t.dataset.k){S[t.dataset.k]=t.value}else if(t.dataset.l){S[t.dataset.l][+t.dataset.i][t.dataset.f]=t.value}else return;render()});
