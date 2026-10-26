@@ -55,6 +55,11 @@ button.main{background:var(--accent);border-color:var(--accent);color:#fff;font-
 #cv .xi b{display:block}
 #cv .hb ul{columns:150px;margin:0}
 @media(max-width:600px){#cv:not(.pf) .top{flex-direction:column}#cv:not(.pf) .tx{padding:16px}#cv:not(.pf) .cols{grid-template-columns:1fr}#cv:not(.pf) .xi{grid-template-columns:1fr;gap:4px}}
+:root{--wb:#fff3cd;--wl:#f0a500;--wi:#4d3200;--oa:#fff}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--wb:#3a2e0a;--wl:#d9a300;--wi:#ffe39a;--oa:#10201b}}:root[data-theme="dark"]{--wb:#3a2e0a;--wl:#d9a300;--wi:#ffe39a;--oa:#10201b}
+.tip{margin:16px auto 0;width:calc(100% - 32px);max-width:1168px;background:var(--accent);color:var(--oa);border-radius:10px;padding:12px 16px;font-weight:600;line-height:1.45}.tip span{font-weight:400}
+.warn{background:var(--wb);border:2px solid var(--wl);color:var(--wi)}
+@media (prefers-reduced-motion:no-preference){@keyframes pu{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent)}50%{box-shadow:0 0 0 9px transparent}}#print,#img{animation:pu 1.8s ease-in-out 4}}
+@media print{.tip{display:none!important}}
 @media print{body{background:#fff}.panel,.bar,.sub{display:none!important}.app{display:block;padding:0}.stage{overflow:visible}#cv{box-shadow:none;max-width:none}}
 .ov{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.88);overflow:auto;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}.ov p{color:#fff;text-align:center;margin:0 0 8px}.ov img{display:block;width:100%;max-width:794px;margin:0 auto 12px;background:#fff}.ov button{display:block;margin:0 auto}.ov a.dl{display:block;text-align:center;color:#fff;font-weight:600;margin:0 0 12px;text-decoration:underline}
 </style>
@@ -62,7 +67,8 @@ button.main{background:var(--accent);border-color:var(--accent);color:#fff;font-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-<div class="panel" id="iab" hidden style="margin:16px auto 0;width:calc(100% - 32px);max-width:1168px"><b>Bạn đang mở trang trong ứng dụng (Zalo, Facebook...)</b><div style="color:var(--mute);margin:6px 0 10px;font-size:13px">Các ứng dụng này thường không cho tải file PDF. Hãy mở trang bằng Chrome hoặc Safari, hoặc lưu CV dạng ảnh.</div><div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="main" id="openchrome" hidden>Mở bằng Chrome</button><button type="button" id="copylink">Sao chép link</button><button type="button" id="saveimg">Lưu CV dạng ảnh</button><span id="iabmsg" role="status" style="flex-basis:100%;font-size:13px;color:var(--mute)"></span></div></div>
+<div class="tip">Lưu ý: điền xong, nhớ bấm “Lưu ảnh” hoặc “Tải PDF” để giữ CV của bạn. <span>Thông tin chỉ nằm trên máy của bạn, không bị gửi đi đâu.</span> <button type="button" id="goSave" style="margin-left:6px">Đến nút lưu</button></div>
+<div class="panel warn" id="iab" hidden style="margin:16px auto 0;width:calc(100% - 32px);max-width:1168px"><b style="font-size:16px">Bạn đang mở trang trong ứng dụng (Zalo, Facebook...)</b><div style="margin:6px 0 10px;font-size:14px">Các ứng dụng này thường không cho tải file PDF. Hãy mở trang bằng Chrome hoặc Safari, hoặc lưu CV dạng ảnh.</div><div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="main" id="openchrome" hidden>Mở bằng Chrome</button><button type="button" id="copylink">Sao chép link</button><button type="button" id="saveimg">Lưu CV dạng ảnh</button><span id="iabmsg" role="status" style="flex-basis:100%;font-size:13px;color:inherit"></span></div></div>
 <div class="app">
 <div class="panel" id="form">
 <h1>Tạo CV của bạn</h1>
@@ -91,7 +97,7 @@ button.main{background:var(--accent);border-color:var(--accent);color:#fff;font-
 <div class="stage"><div id="cv"></div></div>
 </div>
 </div>
-<script>
+<script id="appjs">
 var S={hobby:"",act:[{}],dob:"",name:"",title:"",email:"",phone:"",addr:"",summary:"",skills:"",langs:"",photo:"",exp:[{}],edu:[{}],color:"#b3243b",tpl:"modern"};
 var F={exp:[["role","Vị trí"],["org","Công ty"],["time","Thời gian (vd: 01/2022 - Hiện tại)"],["desc","Mô tả công việc (mỗi dòng một ý)","t"]],act:[["role","Vai trò"],["org","Tên hoạt động / tổ chức"],["time","Thời gian (vd: 06/2016 - 08/2016)"],["desc","Mô tả (mỗi dòng một ý)","t"]],edu:[["school","Trường"],["major","Ngành học"],["time","Thời gian (vd: 2013 - 2017)"],["ach","Thành tích (mỗi dòng một ý)","t"]]};
 var COL=["#b3243b","#1f5c4d","#2b4a8b","#3b3b3b","#8a5a12"];
@@ -156,6 +162,8 @@ document.getElementById("copylink").onclick=function(){var t=document.createElem
 document.getElementById("saveimg").onclick=imgOut}
 document.getElementById("img").onclick=imgOut;
 list("exp");list("edu");list("act");sw();render();
+document.getElementById("goSave").onclick=function(){document.getElementById("print").scrollIntoView({behavior:"smooth",block:"center"})};
+(function(){try{if(typeof claude!=="undefined"||!/^https?:$/.test(location.protocol))return;if(/[?&]u=/.test(location.search))history.replaceState(null,"",location.pathname+location.hash);if(sessionStorage.getItem("cv-r")){sessionStorage.removeItem("cv-r");return}var sig=function(d){var s=d.querySelector("style"),j=d.getElementById("appjs");return(s?s.textContent:"")+"|"+(j?j.textContent:"")};fetch(location.pathname+"?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.text()}).then(function(t){var d=new DOMParser().parseFromString(t,"text/html");if(d.getElementById("appjs")&&sig(d)!==sig(document)){sessionStorage.setItem("cv-r","1");location.replace(location.pathname+"?u="+Date.now()+location.hash)}}).catch(function(){})}catch(e){}})();
 </script>
 </body>
 </html>
